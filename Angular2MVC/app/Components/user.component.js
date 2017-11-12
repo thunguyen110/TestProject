@@ -1,271 +1,216 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { UserService } from '../Service/user.service';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ModalComponent } from 'ng2-bs3-modal/ng2-bs3-modal';
-import { IUser } from '../Model/user';
-import { DBOperation } from '../Shared/enum';
-import { Observable } from 'rxjs/Rx';
-import { Global } from '../Shared/global';
-import { shoppingCart } from '../Model/shoppingCart';  //Add
-import { userItem } from '../Model/userItem';
-
-
-@Component({
-    templateUrl: 'app/Components/user.component.html'
-})
-
-export class UserComponent implements OnInit {
-
-    @ViewChild('modal') modal: ModalComponent;
-    selectedUsers: IUser[] = [];
-    users: IUser[];
-    user: IUser;
-    msg: string;
-    indLoading: boolean = false;
-    userFrm: FormGroup;
-    dbops: DBOperation;
-    modalTitle: string;
-    modalBtnTitle: string;
-    listFilter: string;
-    searchTitle: "Search User";
-    currentUser: IUser;
-
-    currentShoppingCart: shoppingCart; //add
-
-    constructor(private fb: FormBuilder, private _userService: UserService) { }
-
-    ngOnInit(): void {
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var core_1 = require("@angular/core");
+var user_service_1 = require("../Service/user.service");
+var forms_1 = require("@angular/forms");
+var ng2_bs3_modal_1 = require("ng2-bs3-modal/ng2-bs3-modal");
+var enum_1 = require("../Shared/enum");
+var global_1 = require("../Shared/global");
+var shoppingCart_1 = require("../Model/shoppingCart"); //Add
+var userItem_1 = require("../Model/userItem");
+var UserComponent = (function () {
+    function UserComponent(fb, _userService) {
+        this.fb = fb;
+        this._userService = _userService;
+        this.selectedUsers = [];
+        this.indLoading = false;
+    }
+    UserComponent.prototype.ngOnInit = function () {
         this.userFrm = this.fb.group({
             Id: [''],
-            FirstName: ['', Validators.required],
+            FirstName: ['', forms_1.Validators.required],
             LastName: [''],
-            Gender: ['', Validators.required]
+            Gender: ['', forms_1.Validators.required]
         });
         this.LoadUsers();
         this.LoadShoppingCart();
-    }
-
+    };
     //add
-
-    checkboxChange(userIdString: string) {
+    UserComponent.prototype.checkboxChange = function (userIdString) {
         var userId = parseInt(userIdString);
         var x = userId;
-        for (var i = 0; i < this.selectedUsers.length; i++)
-        {
-            if (this.selectedUsers[i].Id == userId)
-          
-            {
+        for (var i = 0; i < this.selectedUsers.length; i++) {
+            if (this.selectedUsers[i].Id == userId) {
                 this.selectedUsers.splice(i, 1);
                 return;
             }
-           
         }
         //if user is not in selected user list
-     
-            //find the user with userId first
+        //find the user with userId first
         var currentselectedUser = this.findUserById(userId);
-        if (currentselectedUser != null)
-        {
+        if (currentselectedUser != null) {
             this.selectedUsers.push(currentselectedUser);
         }
-            
-        
-        
-    }
-
-
-    findUserById(userId: number)
-    {
-        for (var i = 0; i < this.users.length; i++)
-        {
-            if (this.users[i].Id == userId)
-            {
+    };
+    UserComponent.prototype.findUserById = function (userId) {
+        for (var i = 0; i < this.users.length; i++) {
+            if (this.users[i].Id == userId) {
                 return this.users[i];
             }
-
         }
         return null;
-    }
-
+    };
     //add
-
-    LoadShoppingCart(): void {
-        this.currentUser = JSON.parse(sessionStorage.getItem("currentUser"));   //session storage is expired
+    UserComponent.prototype.LoadShoppingCart = function () {
+        this.currentUser = JSON.parse(sessionStorage.getItem("currentUser")); //session storage is expired
         var selectedUserItemList = this.convertUserListToUserItemList(this.selectedUsers);
-        this.currentShoppingCart = JSON.parse(localStorage.getItem("currentShoppingCart" + this.currentUser.Id));   //local storage never expire
-    }
-    LoadUsers(): void {
+        this.currentShoppingCart = JSON.parse(localStorage.getItem("currentShoppingCart" + this.currentUser.Id)); //local storage never expire
+    };
+    UserComponent.prototype.LoadUsers = function () {
+        var _this = this;
         this.indLoading = true;
-        this._userService.get(Global.BASE_USER_ENDPOINT)
-            .subscribe(users => { this.users = users; this.indLoading = false; },
-            error => this.msg = <any>error);
-    }
-
+        this._userService.get(global_1.Global.BASE_USER_ENDPOINT)
+            .subscribe(function (users) { _this.users = users; _this.indLoading = false; }, function (error) { return _this.msg = error; });
+    };
     //add
-    PurchaseItems()
-    {
+    UserComponent.prototype.purchaseItems = function () {
         //currentUser is already log in, so we retrieve currentUserId first
         //check if this user has a shopping cart already
-        this.currentUser = JSON.parse(sessionStorage.getItem("currentUser"));   //session storage is expired
+        this.currentUser = JSON.parse(sessionStorage.getItem("currentUser")); //session storage is expired
         var selectedUserItemList = this.convertUserListToUserItemList(this.selectedUsers);
-        this.currentShoppingCart = JSON.parse(localStorage.getItem("currentShoppingCart" + this.currentUser.Id));   //local storage never expire
-        if (this.currentShoppingCart == null)
-        {
-            this.currentShoppingCart = new shoppingCart();
+        this.currentShoppingCart = JSON.parse(localStorage.getItem("currentShoppingCart" + this.currentUser.Id)); //local storage never expire
+        if (this.currentShoppingCart == null) {
+            this.currentShoppingCart = new shoppingCart_1.shoppingCart();
             this.currentShoppingCart.userId = this.currentUser.Id;
             this.currentShoppingCart.userItemList = selectedUserItemList;
         }
         else {
-            this.currentShoppingCart.userItemList = this.mergeItemList(this.currentShoppingCart.userItemList, selectedUserItemList)  
+            this.currentShoppingCart.userItemList = this.mergeItemList(this.currentShoppingCart.userItemList, selectedUserItemList);
         }
         localStorage.setItem("currentShoopingCart" + this.currentUser.Id, JSON.stringify(this.currentShoppingCart));
-    }
-
-    convertUserListToUserItemList(selectedUsers: IUser[])
-    {
-        var userItemList: userItem[] = [];
-        for (var i = 0; i < selectedUsers.length; i++)
-        {
-            var tempUserItem = new userItem();
+    };
+    UserComponent.prototype.convertUserListToUserItemList = function (selectedUsers) {
+        var userItemList = [];
+        for (var i = 0; i < selectedUsers.length; i++) {
+            var tempUserItem = new userItem_1.userItem();
             tempUserItem.Quantity = 1;
             tempUserItem.user = selectedUsers[i];
-            tempUserItem.SubTotal = 10.00 * tempUserItem.Quantity; 
+            tempUserItem.SubTotal = 10.00 * tempUserItem.Quantity;
             userItemList.push(tempUserItem);
         }
         return userItemList;
-    }
-
-
-    mergeItemList(existingItems: userItem[], newItemList: userItem[])
-    {
+    };
+    UserComponent.prototype.mergeItemList = function (existingItems, newItemList) {
         var matchingFlag = false;
-        for (var i = 0; i < existingItems.length; i++)
-        {
+        for (var i = 0; i < existingItems.length; i++) {
             var CurrentItem = existingItems[i];
             matchingFlag = false;
-            for (var j = 0; j < newItemList.length; j++)
-            {
-                if (CurrentItem.user.Id == newItemList[j].user.Id)
-                {
+            for (var j = 0; j < newItemList.length; j++) {
+                if (CurrentItem.user.Id == newItemList[j].user.Id) {
                     matchingFlag = true;
                     newItemList[j].Quantity = CurrentItem.Quantity + newItemList[j].Quantity;
                     break;
                 }
             }
             //end of for loop, find existing index = i, does not match any new items
-            if (!matchingFlag)
-            {
+            if (!matchingFlag) {
                 newItemList.push(CurrentItem);
             }
         }
-        
         return newItemList;
-    }
-
-
-
-
-
-    addUser() {
-        this.dbops = DBOperation.create;
+    };
+    UserComponent.prototype.addUser = function () {
+        this.dbops = enum_1.DBOperation.create;
         this.SetControlsState(true);
         this.modalTitle = "Add New User";
         this.modalBtnTitle = "Add";
         this.userFrm.reset();
         this.modal.open();
-    }
-
-    editUser(id: number) {
-        this.dbops = DBOperation.update;
+    };
+    UserComponent.prototype.editUser = function (id) {
+        this.dbops = enum_1.DBOperation.update;
         this.SetControlsState(true);
         this.modalTitle = "Edit User";
         this.modalBtnTitle = "Update";
-        this.user = this.users.filter(x => x.Id == id)[0];
+        this.user = this.users.filter(function (x) { return x.Id == id; })[0];
         this.userFrm.setValue(this.user);
         this.modal.open();
-    }
-
-    deleteUser(id: number) {
-        this.dbops = DBOperation.delete;
+    };
+    UserComponent.prototype.deleteUser = function (id) {
+        this.dbops = enum_1.DBOperation.delete;
         this.SetControlsState(false);
         this.modalTitle = "Confirm to Delete?";
         this.modalBtnTitle = "Delete";
-        this.user = this.users.filter(x => x.Id == id)[0];
+        this.user = this.users.filter(function (x) { return x.Id == id; })[0];
         this.userFrm.setValue(this.user);
         this.modal.open();
-    }
-
-    onSubmit(formData: any) {
+    };
+    UserComponent.prototype.onSubmit = function (formData) {
+        var _this = this;
         this.msg = "";
-
         switch (this.dbops) {
-            case DBOperation.create:
-                this._userService.post(Global.BASE_USER_ENDPOINT, formData._value).subscribe(
-                    data => {
-                        if (data == 1) //Success
-                        {
-                            this.msg = "Data successfully added.";
-                            this.LoadUsers();
-                            this.LoadShoppingCart();
-                        }
-                        else {
-                            this.msg = "There is some issue in saving records, please contact to system administrator!"
-                        }
-
-                        this.modal.dismiss();
-                    },
-                    error => {
-                        this.msg = error;
+            case enum_1.DBOperation.create:
+                this._userService.post(global_1.Global.BASE_USER_ENDPOINT, formData._value).subscribe(function (data) {
+                    if (data == 1) {
+                        _this.msg = "Data successfully added.";
+                        _this.LoadUsers();
+                        _this.LoadShoppingCart();
                     }
-                );
-                break;
-            case DBOperation.update:
-                this._userService.put(Global.BASE_USER_ENDPOINT, formData._value.Id, formData._value).subscribe(
-                    data => {
-                        if (data == 1) //Success
-                        {
-                            this.msg = "Data successfully updated.";
-                            this.LoadUsers();
-                        }
-                        else {
-                            this.msg = "There is some issue in saving records, please contact to system administrator!"
-                        }
-
-                        this.modal.dismiss();
-                    },
-                    error => {
-                        this.msg = error;
+                    else {
+                        _this.msg = "There is some issue in saving records, please contact to system administrator!";
                     }
-                );
+                    _this.modal.dismiss();
+                }, function (error) {
+                    _this.msg = error;
+                });
                 break;
-            case DBOperation.delete:
-                this._userService.delete(Global.BASE_USER_ENDPOINT, formData._value.Id).subscribe(
-                    data => {
-                        if (data == 1) //Success
-                        {
-                            this.msg = "Data successfully deleted.";
-                            this.LoadUsers();
-                        }
-                        else {
-                            this.msg = "There is some issue in saving records, please contact to system administrator!"
-                        }
-
-                        this.modal.dismiss();
-                    },
-                    error => {
-                        this.msg = error;
+            case enum_1.DBOperation.update:
+                this._userService.put(global_1.Global.BASE_USER_ENDPOINT, formData._value.Id, formData._value).subscribe(function (data) {
+                    if (data == 1) {
+                        _this.msg = "Data successfully updated.";
+                        _this.LoadUsers();
                     }
-                );
+                    else {
+                        _this.msg = "There is some issue in saving records, please contact to system administrator!";
+                    }
+                    _this.modal.dismiss();
+                }, function (error) {
+                    _this.msg = error;
+                });
                 break;
-
+            case enum_1.DBOperation.delete:
+                this._userService.delete(global_1.Global.BASE_USER_ENDPOINT, formData._value.Id).subscribe(function (data) {
+                    if (data == 1) {
+                        _this.msg = "Data successfully deleted.";
+                        _this.LoadUsers();
+                    }
+                    else {
+                        _this.msg = "There is some issue in saving records, please contact to system administrator!";
+                    }
+                    _this.modal.dismiss();
+                }, function (error) {
+                    _this.msg = error;
+                });
+                break;
         }
-    }
-
-    SetControlsState(isEnable: boolean) {
+    };
+    UserComponent.prototype.SetControlsState = function (isEnable) {
         isEnable ? this.userFrm.enable() : this.userFrm.disable();
-    }
-    criteriaChange(value: string): void {
+    };
+    UserComponent.prototype.criteriaChange = function (value) {
         if (value != '[object Event]')
-        this.listFilter = value;
-    }
-}
+            this.listFilter = value;
+    };
+    return UserComponent;
+}());
+__decorate([
+    core_1.ViewChild('modal'),
+    __metadata("design:type", ng2_bs3_modal_1.ModalComponent)
+], UserComponent.prototype, "modal", void 0);
+UserComponent = __decorate([
+    core_1.Component({
+        templateUrl: 'app/Components/user.component.html'
+    }),
+    __metadata("design:paramtypes", [forms_1.FormBuilder, user_service_1.UserService])
+], UserComponent);
+exports.UserComponent = UserComponent;
+//# sourceMappingURL=user.component.js.map
